@@ -1,0 +1,79 @@
+{
+    "dataSources": {
+        "ds_um193LWp": {
+            "type": "ds.search",
+            "options": {
+                "query": "host=\"SOPHOSIPADDRESS\" message=\"Lease IP*\"\r\n| eval rd=trim(replace(raw_data,\"^\\\"|\\\"$$\",\"\"))\r\n| rex field=rd \"(?<hostname>[^\\t]+)$$\"\r\n| rex field=hostname \"(?<hostname>[^ ]+)$$\"\r\n| stats latest(_time) as last_seen values(client_physical_address) as mac latest(hostname) as hostname by ipaddress\r\n| eval hostname=if(len(trim(hostname))=0,\"(unknown)\",hostname)\r\n| eval last_seen=strftime(last_seen,\"%Y-%m-%d %H:%M:%S\")\r\n| sort ip(ipaddress)",
+                "queryParameters": {
+                    "earliest": "-24h@h",
+                    "latest": "now"
+                }
+            },
+            "name": "Sophos DHCP - Table search"
+        }
+    },
+    "visualizations": {
+        "viz_FS439tnE": {
+            "type": "splunk.table",
+            "options": {
+                "count": 80,
+                "dataOverlayMode": "none",
+                "drilldown": "none",
+                "showRowNumbers": false,
+                "showInternalFields": false,
+                "fontSize": "small"
+            },
+            "dataSources": {
+                "primary": "ds_um193LWp"
+            },
+            "title": "Sophos DHCP"
+        }
+    },
+    "inputs": {
+        "input_global_trp": {
+            "type": "input.timerange",
+            "options": {
+                "token": "global_time",
+                "defaultValue": "-24h@h,now"
+            },
+            "title": "Global Time Range"
+        }
+    },
+    "layout": {
+        "type": "grid",
+        "options": {
+            "width": 1440,
+            "height": 700,
+            "showTitleAndDescription": false
+        },
+        "structure": [
+            {
+                "item": "viz_FS439tnE",
+                "type": "block",
+                "position": {
+                    "x": 0,
+                    "y": 0,
+                    "w": 1440,
+                    "h": 974
+                }
+            }
+        ],
+        "globalInputs": [
+            "input_global_trp"
+        ]
+    },
+    "title": "Sophos DHCP",
+    "description": "",
+    "defaults": {
+        "dataSources": {
+            "ds.search": {
+                "options": {
+                    "queryParameters": {
+                        "latest": "$global_time.latest$",
+                        "earliest": "$global_time.earliest$"
+                    }
+                }
+            }
+        }
+    }
+}
